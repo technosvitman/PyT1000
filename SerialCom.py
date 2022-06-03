@@ -35,5 +35,12 @@ class SerialCom():
             output.append(SerialCom(name=port.name))
             
         return output
+    
+    def __repr__(self):
+        return "serialCom(%s){Baudrate:%d, parity:%s, stopbits:%s}"%(
+                self.__name,
+                self.baudrate,
+                str(self.parity),
+                str(self.stopbits))
 
    

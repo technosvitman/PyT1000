@@ -139,7 +139,7 @@ os.system("")
 t1000 = pyT1000()
 term = Terminal(t1000.onTx)
 t1000.setTerminal(term)
-t1000.open(SerialCom("COM12"))
+t1000.open(SerialCom("COM12", parity=PARITY_NONE))
 t1000.setVtMode()
 
 while t1000.is_alive():
