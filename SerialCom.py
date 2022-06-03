@@ -3,13 +3,18 @@ import serial.tools.list_ports
 
 class SerialCom():
 
-    def __init__(self, name="", baudrate=115200):
+    def __init__(self, name="", baudrate=115200, parity=PARITY_NONE, stopbits=STOPBITS_ONE):
         self.baudrate=baudrate
+        self.parity=parity
+        self.stopbits=stopbits
         self.__name=name
         self.__ser = None
     
     def open(self):
-        self.__ser = Serial(self.__name, baudrate=self.baudrate, timeout=0.01)
+        self.__ser = Serial(self.__name,
+                        baudrate=self.baudrate,
+                        parity=self.parity,
+                        stopbits=self.stopbits, timeout=0.01)
     
     def close(self):
         self.__ser.close()

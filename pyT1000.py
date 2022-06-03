@@ -21,7 +21,7 @@ class Terminal(threading.Thread):
         while output != b"\x03":
             output = msvcrt.getch()
             self.__on_char(output)        
-        self.print("\033[m\033[2J")
+        self.print("\033[m\033[2J\033[H")
                 
         
     def print(self, str):
@@ -140,7 +140,7 @@ t1000 = pyT1000()
 term = Terminal(t1000.onTx)
 t1000.setTerminal(term)
 t1000.open(SerialCom("COM12"))
-#t1000.setVtMode()
+t1000.setVtMode()
 
 while t1000.is_alive():
     time.sleep(1)
