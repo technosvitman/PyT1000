@@ -17,6 +17,7 @@ class pyT1000(threading.Thread):
         self.__ser=None
         self.__next_cmd=None
         self.__vtmode=False;
+        self.__asciimode=False;
         keyboard.on_press_key(0x48, self.open_special)
         keyboard.on_press_key(0x4B, self.open_special)
         keyboard.on_press_key(0x4D, self.open_special)
@@ -80,6 +81,17 @@ class pyT1000(threading.Thread):
                 self.__term.print(datetime.now().strftime("%H:%M:%S.%f"))
                 self.__term.print(":\033[0m")
             self.__tagtime=False
+            
+            
+    def __printChar(self, char):
+        if self.__asciimode :
+            if int(char[0]) > 31 and int(char[0])<128:
+                self.__print(char.decode())
+            else:
+                self.__print(str(char))
+        else:
+            self.__print("%02X "%int(char[0]))
+        
                 
         
     def onTx(self, char):
@@ -94,10 +106,7 @@ class pyT1000(threading.Thread):
                     self.__print("\n")
                     self.__prevdir=1
                 self.__printtime("\n\033[32m TX")
-                if int(char[0]) > 31 and int(char[0])<128:
-                    self.__print(char.decode())
-                else:
-                    self.__print(str(char))
+                self.__printChar(char)
                         
     def onRx(self, char):
         if self.__prevdir == 1:
@@ -105,10 +114,7 @@ class pyT1000(threading.Thread):
             self.__print("\n")
             self.__prevdir=0
         self.__printtime("\n\033[33m RX")
-        if int(char[0]) > 31 and int(char[0])<128:
-            self.__print(char.decode())
-        else:
-            self.__print(str(char))
+        self.__printChar(char)
             
     
 
@@ -116,7 +122,7 @@ t1000 = pyT1000()
 term = StdTerm(t1000.onTx)
 t1000.setTerminal(term)
 t1000.open(SerialCom("COM12", parity=PARITY_NONE))
-t1000.setVtMode()
+#t1000.setVtMode()
 
 while t1000.is_alive():
     time.sleep(1)
