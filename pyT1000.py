@@ -1,32 +1,9 @@
-import os
-import sys
 import datetime
 import time
 from datetime import datetime
-import msvcrt
 import threading
 import keyboard
-from SerialCom import *
-
-class Terminal(threading.Thread):
-    def __init__(self, on_char):
-        threading.Thread.__init__(self)
-        self.__on_char = on_char
-        self.start()        
-        self.print("\033[2J")
-        self.__ser=None
-    
-    def run(self):
-        output = ""
-        while output != b"\x03":
-            output = msvcrt.getch()
-            self.__on_char(output)        
-        self.print("\033[m\033[2J\033[H")
-                
-        
-    def print(self, str):
-        print(str, end='', flush=True)
-
+from core import *
 
 class pyT1000(threading.Thread):
 
@@ -135,9 +112,8 @@ class pyT1000(threading.Thread):
             
     
 
-os.system("")
 t1000 = pyT1000()
-term = Terminal(t1000.onTx)
+term = StdTerm(t1000.onTx)
 t1000.setTerminal(term)
 t1000.open(SerialCom("COM12", parity=PARITY_NONE))
 t1000.setVtMode()
