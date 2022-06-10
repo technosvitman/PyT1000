@@ -1,9 +1,20 @@
 from serial import *
 import serial.tools.list_ports
+from enum import Enum
+
+class SerialCom_Parity(Enum):
+    NONE=PARITY_NONE
+    ODD=PARITY_ODD
+    EVEN=PARITY_EVEN
+
+class SerialCom_Stop(Enum):
+    STP1=STOPBITS_ONE
+    STP1_5=STOPBITS_ONE_POINT_FIVE
+    STP2=STOPBITS_TWO
 
 class SerialCom():
 
-    def __init__(self, name="", baudrate=115200, parity=PARITY_NONE, stopbits=STOPBITS_ONE):
+    def __init__(self, name="", baudrate=115200, parity=SerialCom_Parity.NONE, stopbits=SerialCom_Stop.STP1):
         self.baudrate=baudrate
         self.parity=parity
         self.stopbits=stopbits
@@ -13,8 +24,8 @@ class SerialCom():
     def open(self):
         self.__ser = Serial(self.__name,
                         baudrate=self.baudrate,
-                        parity=self.parity,
-                        stopbits=self.stopbits, timeout=0.01)
+                        parity=self.parity.value,
+                        stopbits=self.stopbits.value, timeout=0.01)
     
     def close(self):
         self.__ser.close()
@@ -32,15 +43,18 @@ class SerialCom():
         ports = serial.tools.list_ports.comports()
         output = []
         for port in ports:
-            output.append(SerialCom(name=port.name))
+            output.append(port.name)
             
         return output
     
-    def __repr__(self):
+    def __str__(self):
         return "serialCom(%s){Baudrate:%d, parity:%s, stopbits:%s}"%(
                 self.__name,
                 self.baudrate,
                 str(self.parity),
                 str(self.stopbits))
+    
+    def __repr__(self):
+        return "serialCom(%s)"%(self.__name)
 
    

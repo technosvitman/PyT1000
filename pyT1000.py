@@ -125,13 +125,28 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='pyT1000 : complete serial terminal')
     parser.add_argument("-ascii", default=False, action="store_true")
     parser.add_argument("-vt100", default=False, action="store_true")
+    parser.add_argument("-list", default=False, action="store_true")
+    parser.add_argument("-p", type=str, default=None)
+    parser.add_argument("-stp", choices=["STP1", "STP1_5", "STP2"], default="STP1")
+    parser.add_argument("-par", choices=["NONE", "ODD", "EVEN"], default="NONE")
+    parser.add_argument("-baud", type=int, default=115200)
     
     args = parser.parse_args()
+    
+    if args.list:
+        print(SerialCom.list_ports())
+        exit(0)
+    
+    s = SerialCom(args.p, 
+            baudrate=args.baud,
+            stopbits=SerialCom_Stop[args.stp],
+            parity=SerialCom_Parity[args.par])
+    print(str(s))
 
     t1000 = pyT1000()
     term = StdTerm(t1000.onTx)
     t1000.setTerminal(term)
-    t1000.open(SerialCom("COM12", parity=PARITY_NONE))
+    t1000.open(s)
     
     if args.vt100:
         t1000.setVtMode()
