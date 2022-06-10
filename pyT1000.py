@@ -1,5 +1,6 @@
 import datetime
 import time
+import argparse
 from datetime import datetime
 import threading
 import keyboard
@@ -45,6 +46,9 @@ class pyT1000(threading.Thread):
         
     def setVtMode(self, vtmode=True):
         self.__vtmode=vtmode;
+        
+    def setAsciiMode(self, ascimode=True):
+        self.__asciimode=ascimode;
         
     def run(self):
         while not self.__quit:
@@ -116,15 +120,25 @@ class pyT1000(threading.Thread):
         self.__printtime("\n\033[33m RX")
         self.__printChar(char)
             
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='pyT1000 : complete serial terminal')
+    parser.add_argument("-ascii", default=False, action="store_true")
+    parser.add_argument("-vt100", default=False, action="store_true")
     
+    args = parser.parse_args()
 
-t1000 = pyT1000()
-term = StdTerm(t1000.onTx)
-t1000.setTerminal(term)
-t1000.open(SerialCom("COM12", parity=PARITY_NONE))
-#t1000.setVtMode()
-
-while t1000.is_alive():
-    time.sleep(1)
+    t1000 = pyT1000()
+    term = StdTerm(t1000.onTx)
+    t1000.setTerminal(term)
+    t1000.open(SerialCom("COM12", parity=PARITY_NONE))
+    
+    if args.vt100:
+        t1000.setVtMode()
+    elif args.ascii:
+        t1000.setAsciiMode()
+        
+    while t1000.is_alive():
+        time.sleep(1)
 
         
