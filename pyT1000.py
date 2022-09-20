@@ -23,6 +23,10 @@ class pyT1000(threading.Thread):
         keyboard.on_press_key(0x4B, self.open_special)
         keyboard.on_press_key(0x4D, self.open_special)
         keyboard.on_press_key(0x50, self.open_special)
+        keyboard.on_press_key(0x3B, self.open_special)
+        keyboard.on_press_key(0x3C, self.open_special)
+        keyboard.on_press_key(0x3D, self.open_special)
+        keyboard.on_press_key(0x3E, self.open_special)
         self.start()
         
     def open(self, ser):
@@ -40,6 +44,14 @@ class pyT1000(threading.Thread):
                 self.__next_cmd = b"\033[C"
             elif k == 0x50:
                 self.__next_cmd = b"\033[D"
+            elif k == 0x3B:
+                self.__next_cmd = b"\033[P"
+            elif k == 0x3C:
+                self.__next_cmd = b"\033[Q"
+            elif k == 0x3D:
+                self.__next_cmd = b"\033[R"
+            elif k == 0x3E:
+                self.__next_cmd = b"\033[S"
         
     def close(self, ser):
         self.__ser.close()
@@ -54,14 +66,14 @@ class pyT1000(threading.Thread):
         while not self.__quit:
             if self.__ser:
                 rdata = self.__ser.read(1)
-                if rdata and rdata != b'':
+                if  self.__next_cmd:
+                    self.__ser.write(self.__next_cmd)
+                    self.__next_cmd=None
+                elif rdata and rdata != b'':
                     if self.__vtmode:
                         self.__print(str(rdata, encoding='ansi'))
                     else:
                         self.onRx(rdata)
-                if  self.__next_cmd:
-                    self.__ser.write(self.__next_cmd)
-                    self.__next_cmd=None
                 
             if not self.__vtmode:
                 if time.time_ns() - self.__last>1000000000:
@@ -100,8 +112,8 @@ class pyT1000(threading.Thread):
         
     def onTx(self, char):
         if char == b"\x03":
-            self.__quit=True
-        else:
+            self.__quit=True        
+        elif not self.__next_cmd:
             if self.__ser:
                 self.__ser.write(char)
             if not self.__vtmode:

@@ -10,7 +10,7 @@ class StdTerm(Terminal):
         self.print("\033[m\033[2J\033[H")
     
     def getch(self):
-        return msvcrt.getch() 
+        return msvcrt.getch()
         
     def print(self, str):
         print(str, end='', flush=True)
