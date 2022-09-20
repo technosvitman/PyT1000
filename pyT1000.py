@@ -93,9 +93,8 @@ class pyT1000(threading.Thread):
         if self.__tagtime:
             self.__last = time.time_ns()
             if self.__term:
-                self.__term.print(header+" ")
-                self.__term.print(datetime.now().strftime("%H:%M:%S.%f"))
-                self.__term.print(":\033[0m")
+                self.__term.print(header+" "+
+                        datetime.now().strftime("%H:%M:%S.%f") + ":\033[0m")
             self.__tagtime=False
             
             
@@ -114,8 +113,6 @@ class pyT1000(threading.Thread):
         if char == b"\x03":
             self.__quit=True        
         elif not self.__next_cmd:
-            if self.__ser:
-                self.__ser.write(char)
             if not self.__vtmode:
                 if self.__prevdir == 0:
                     self.__tagtime = True
@@ -123,6 +120,8 @@ class pyT1000(threading.Thread):
                     self.__prevdir=1
                 self.__printtime("\n\033[32m TX")
                 self.__printChar(char)
+            if self.__ser:
+                self.__ser.write(char)
                         
     def onRx(self, char):
         if self.__prevdir == 1:
