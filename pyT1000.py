@@ -1,10 +1,12 @@
 import datetime
 import time
 import argparse
+import wx
 from datetime import datetime
 import threading
 import keyboard
 from core import *
+from gui import *
 
 class pyT1000(threading.Thread):
 
@@ -137,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument("-ascii", default=False, action="store_true")
     parser.add_argument("-vt100", default=False, action="store_true")
     parser.add_argument("-list", default=False, action="store_true")
+    parser.add_argument("-gui", default=False, action="store_true")
     parser.add_argument("-p", type=str, default=None)
     parser.add_argument("-stp", choices=["STP1", "STP1_5", "STP2"], default="STP1")
     parser.add_argument("-par", choices=["NONE", "ODD", "EVEN"], default="NONE")
@@ -147,24 +150,40 @@ if __name__ == "__main__":
     if args.list:
         print(SerialCom.list_ports())
         exit(0)
-    
-    s = SerialCom(args.p, 
-            baudrate=args.baud,
-            stopbits=SerialCom_Stop[args.stp],
-            parity=SerialCom_Parity[args.par])
-    print(str(s))
 
     t1000 = pyT1000()
-    term = StdTerm(t1000.onTx)
-    t1000.setTerminal(term)
-    t1000.open(s)
     
-    if args.vt100:
+    if args.gui:
+        app = wx.App()
+        frame = MainFrame()
+        term = GuiTerm(t1000.onTx, frame.GetTerm())   
+        s = SerialCom(args.p, 
+                baudrate=args.baud,
+                stopbits=SerialCom_Stop[args.stp],
+                parity=SerialCom_Parity[args.par])  
+        t1000.setTerminal(term)
+        t1000.open(s)
         t1000.setVtMode()
-    elif args.ascii:
-        t1000.setAsciiMode()
-        
-    while t1000.is_alive():
-        time.sleep(1)
+        app.SetTopWindow(frame)
+        frame.Show()
+        frame.Maximize(True)   
+        app.MainLoop()
+    else:    
+        s = SerialCom(args.p, 
+                baudrate=args.baud,
+                stopbits=SerialCom_Stop[args.stp],
+                parity=SerialCom_Parity[args.par])
+        print(str(s))
+        term = StdTerm(t1000.onTx)
+        t1000.setTerminal(term)
+        t1000.open(s)
+    
+        if args.vt100:
+            t1000.setVtMode()
+        elif args.ascii:
+            t1000.setAsciiMode()
+            
+        while t1000.is_alive():
+            time.sleep(1)
 
         
