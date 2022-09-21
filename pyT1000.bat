@@ -1,0 +1,1 @@
+cmd.exe /C "py pyT1000.py -gui"
