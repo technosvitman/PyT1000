@@ -6,11 +6,12 @@ from datetime import datetime
 import threading
 import keyboard
 from core import *
+from script import *
 from gui import *
 
 class pyT1000(threading.Thread):
 
-    def __init__(self, outputdir):
+    def __init__(self, outputdir, script):
         threading.Thread.__init__(self)
         self.__last=time.time_ns()
         self.__quit=False
@@ -22,6 +23,7 @@ class pyT1000(threading.Thread):
         self.__vtmode=False;
         self.__asciimode=False;
         self.__logger = Logger(outputdir)
+        self.__script=script
         
         keyboard.on_press_key(0x48, self.open_special)
         keyboard.on_press_key(0x4B, self.open_special)
@@ -105,12 +107,12 @@ class pyT1000(threading.Thread):
             
     def __printChar(self, char):
         if self.__asciimode :
-            if int(char[0]) > 31 and int(char[0])<128:
+            if int(char) > 31 and int(char)<128:
                 self.__print(char.decode())
             else:
                 self.__print(str(char))
         else:
-            self.__print("%02X "%int(char[0]))
+            self.__print("%02X "%int(char))
         
                 
         
@@ -124,7 +126,8 @@ class pyT1000(threading.Thread):
                     self.__print("\n")
                     self.__prevdir=1
                 self.__printtime("\n\033[32m TX")
-                self.__printChar(char)
+                for b in char:
+                    self.__printChar(b)
             if self.__ser:
                 self.__ser.write(char)
                         
@@ -134,7 +137,11 @@ class pyT1000(threading.Thread):
             self.__print("\n")
             self.__prevdir=0
         self.__printtime("\n\033[33m RX")
-        self.__printChar(char)
+        self.__printChar(char[0])
+        if self.__script:
+            d=self.__script.Compute(char)
+            if d:
+                self.onTx(bytes(d))
             
 
 if __name__ == "__main__":
@@ -143,6 +150,7 @@ if __name__ == "__main__":
     parser.add_argument("-vt100", default=False, action="store_true")
     parser.add_argument("-list", default=False, action="store_true")
     parser.add_argument("-gui", default=False, action="store_true")
+    parser.add_argument("-s", type=str, default=None)
     parser.add_argument("-p", type=str, default=None)
     parser.add_argument("-L", type=str, default=".")
     parser.add_argument("-stp", choices=["STP1", "STP1_5", "STP2"], default="STP1")
@@ -163,8 +171,13 @@ if __name__ == "__main__":
                 baudrate=args.baud,
                 stopbits=SerialCom_Stop[args.stp],
                 parity=SerialCom_Parity[args.par])  
+    
+    script=None
+    if args.s:
+        script = Script(args.s)
+        print(script)
 
-    t1000 = pyT1000(args.L)
+    t1000 = pyT1000(args.L, script)
     
     if args.gui:
         app = wx.App()
@@ -177,7 +190,6 @@ if __name__ == "__main__":
         frame.Maximize(True)   
         app.MainLoop()
     else:    
-        print(str(s))
         term = StdTerm(t1000.onTx)
         t1000.setTerminal(term)
         t1000.open(s)
