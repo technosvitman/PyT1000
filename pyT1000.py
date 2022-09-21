@@ -150,6 +150,15 @@ if __name__ == "__main__":
     if args.list:
         print(SerialCom.list_ports())
         exit(0)
+    
+    if args.p:
+        p=args.p
+    else:
+        p=SerialCom.list_ports()[0]
+    s = SerialCom(p, 
+                baudrate=args.baud,
+                stopbits=SerialCom_Stop[args.stp],
+                parity=SerialCom_Parity[args.par])  
 
     t1000 = pyT1000()
     
@@ -157,22 +166,13 @@ if __name__ == "__main__":
         app = wx.App()
         frame = MainFrame()
         term = GuiTerm(t1000.onTx, frame.GetTerm())   
-        s = SerialCom(args.p, 
-                baudrate=args.baud,
-                stopbits=SerialCom_Stop[args.stp],
-                parity=SerialCom_Parity[args.par])  
         t1000.setTerminal(term)
         t1000.open(s)
-        t1000.setVtMode()
         app.SetTopWindow(frame)
         frame.Show()
         frame.Maximize(True)   
         app.MainLoop()
     else:    
-        s = SerialCom(args.p, 
-                baudrate=args.baud,
-                stopbits=SerialCom_Stop[args.stp],
-                parity=SerialCom_Parity[args.par])
         print(str(s))
         term = StdTerm(t1000.onTx)
         t1000.setTerminal(term)
