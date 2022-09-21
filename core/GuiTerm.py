@@ -3,14 +3,14 @@ import os
 
 from . import Terminal
 
-class StdTerm(Terminal):
-    def __init__(self, on_char):
+class GuiTerm(Terminal):
+    def __init__(self, on_char, guiframe):
+        self.__gui = guiframe
         Terminal.__init__(self, on_char)
-        os.system("")
         self.print("\033[m\033[2J\033[H")
     
     def getch(self):
-        return msvcrt.getch()
+        return self.__gui.getch()
         
     def print(self, str):
-        print(str, end='', flush=True)
+        self.__gui.print(str)

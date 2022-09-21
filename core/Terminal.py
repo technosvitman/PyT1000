@@ -10,7 +10,8 @@ class Terminal(threading.Thread):
         output = ""
         while output != b"\x03":
             output = self.getch()
-            self.__on_char(output)        
+            if output:
+                self.__on_char(output)        
         self.print("\033[m\033[2J\033[H")
     
     def getch(self):
