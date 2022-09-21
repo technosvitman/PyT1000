@@ -21,6 +21,7 @@ class pyT1000(threading.Thread):
         self.__next_cmd=None
         self.__vtmode=False;
         self.__asciimode=False;
+        self.__logger = Logger("log.txt")
         keyboard.on_press_key(0x48, self.open_special)
         keyboard.on_press_key(0x4B, self.open_special)
         keyboard.on_press_key(0x4D, self.open_special)
@@ -29,7 +30,7 @@ class pyT1000(threading.Thread):
         keyboard.on_press_key(0x3C, self.open_special)
         keyboard.on_press_key(0x3D, self.open_special)
         keyboard.on_press_key(0x3E, self.open_special)
-        self.start()
+        self.start()        
         
     def open(self, ser):
         self.__ser=ser
@@ -90,12 +91,12 @@ class pyT1000(threading.Thread):
     def __print(self, str):
         if self.__term:
             self.__term.print(str)
+        self.__logger.print(str)
         
     def __printtime(self, header):
         if self.__tagtime:
             self.__last = time.time_ns()
-            if self.__term:
-                self.__term.print(header+" "+
+            self.__print(header+" "+
                         datetime.now().strftime("%H:%M:%S.%f") + ":\033[0m")
             self.__tagtime=False
             
