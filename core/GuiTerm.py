@@ -10,7 +10,7 @@ class GuiTerm(Terminal):
         self.print("\033[m\033[2J\033[H")
     
     def getch(self):
-        return ''
+        return None
         
     def print(self, str):
         self.__gui.print(str)
