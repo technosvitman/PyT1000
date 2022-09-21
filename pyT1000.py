@@ -10,7 +10,7 @@ from gui import *
 
 class pyT1000(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, outputdir):
         threading.Thread.__init__(self)
         self.__last=time.time_ns()
         self.__quit=False
@@ -21,7 +21,8 @@ class pyT1000(threading.Thread):
         self.__next_cmd=None
         self.__vtmode=False;
         self.__asciimode=False;
-        self.__logger = Logger("log.txt")
+        self.__logger = Logger(outputdir)
+        
         keyboard.on_press_key(0x48, self.open_special)
         keyboard.on_press_key(0x4B, self.open_special)
         keyboard.on_press_key(0x4D, self.open_special)
@@ -91,7 +92,8 @@ class pyT1000(threading.Thread):
     def __print(self, str):
         if self.__term:
             self.__term.print(str)
-        self.__logger.print(str)
+        if not self.__vtmode:
+            self.__logger.print(str)
         
     def __printtime(self, header):
         if self.__tagtime:
@@ -142,6 +144,7 @@ if __name__ == "__main__":
     parser.add_argument("-list", default=False, action="store_true")
     parser.add_argument("-gui", default=False, action="store_true")
     parser.add_argument("-p", type=str, default=None)
+    parser.add_argument("-L", type=str, default=".")
     parser.add_argument("-stp", choices=["STP1", "STP1_5", "STP2"], default="STP1")
     parser.add_argument("-par", choices=["NONE", "ODD", "EVEN"], default="NONE")
     parser.add_argument("-baud", type=int, default=115200)
@@ -161,7 +164,7 @@ if __name__ == "__main__":
                 stopbits=SerialCom_Stop[args.stp],
                 parity=SerialCom_Parity[args.par])  
 
-    t1000 = pyT1000()
+    t1000 = pyT1000(args.L)
     
     if args.gui:
         app = wx.App()
