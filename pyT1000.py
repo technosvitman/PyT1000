@@ -107,12 +107,12 @@ class pyT1000(threading.Thread):
             
     def __printChar(self, char):
         if self.__asciimode :
-            if int(char) > 31 and int(char)<128:
+            if int(char[0]) > 31 and int(char[0])<128:
                 self.__print(char.decode())
             else:
                 self.__print(str(char))
         else:
-            self.__print("%02X "%int(char))
+            self.__print("%02X "%int(char[0]))
         
                 
         
@@ -126,8 +126,7 @@ class pyT1000(threading.Thread):
                     self.__print("\n")
                     self.__prevdir=1
                 self.__printtime("\n\033[32m TX")
-                for b in char:
-                    self.__printChar(b)
+                self.__printChar(char)
             if self.__ser:
                 self.__ser.write(char)
                         
@@ -137,11 +136,14 @@ class pyT1000(threading.Thread):
             self.__print("\n")
             self.__prevdir=0
         self.__printtime("\n\033[33m RX")
-        self.__printChar(char[0])
+        self.__printChar(char)
         if self.__script:
-            d=self.__script.Compute(char)
-            if d:
-                self.onTx(bytes(d))
+            dd=self.__script.Compute(char)
+            if dd:
+                d = bytes(dd)
+                while len(d):
+                    self.onTx(d[0:1])
+                    d = d[1:]
             
 
 if __name__ == "__main__":
