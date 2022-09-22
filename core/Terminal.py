@@ -1,11 +1,18 @@
 import threading
 
 class Terminal(threading.Thread):
+    '''
+        @brief initialize Terminal
+        @param[IN] on_char on char to transmit callback
+    '''
     def __init__(self, on_char):
         threading.Thread.__init__(self)
         self.__on_char = on_char
         self.start()        
     
+    '''
+        @brief terminal task
+    '''
     def run(self):
         output = ""
         while output != b"\x03":
@@ -14,9 +21,16 @@ class Terminal(threading.Thread):
                 self.__on_char(output)        
         self.print("\033[m\033[2J\033[H")
     
+    '''
+        @brief get char
+        @return char
+    '''
     def getch(self):
-        return b"\x03"
-                
-        
+        return b"\x03"  
+    
+    '''
+        @brief print char to terminal
+        @param[IN] str char or string to print
+    '''   
     def print(self, str):
         pass
