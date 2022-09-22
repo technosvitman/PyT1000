@@ -11,6 +11,11 @@ from gui import *
 
 class pyT1000(threading.Thread):
 
+    '''
+        @brief init pyT1000
+        @param[IN] outputdir log file output directory
+        @param[IN] script loaded script
+    '''
     def __init__(self, outputdir, script):
         threading.Thread.__init__(self)
         self.__last=time.time_ns()
@@ -33,12 +38,22 @@ class pyT1000(threading.Thread):
         keyboard.on_press_key(0x3C, self.open_special)
         keyboard.on_press_key(0x3D, self.open_special)
         keyboard.on_press_key(0x3E, self.open_special)
-        self.start()        
-        
+        self.start()   
+
+    '''
+        @brief open serial port
+        @param[IN] ser SerialCom to open
+    '''
     def open(self, ser):
         self.__ser=ser
         self.__ser.open()
         
+
+    '''
+        @brief init pyT1000
+        @param[IN] outputdir log file output directory
+        @param[IN] script loaded script
+    '''
     def open_special(self, e):
         if self.__ser:
             k = e.scan_code
@@ -58,16 +73,31 @@ class pyT1000(threading.Thread):
                 self.__next_cmd = b"\033[R"
             elif k == 0x3E:
                 self.__next_cmd = b"\033[S"
-        
-    def close(self, ser):
+
+    '''
+        @brief close serial port
+    '''
+    def close(self):
         self.__ser.close()
-        
+    
+    '''
+        @brief enable/disable VT100 mode
+        @param[IN] vtmode if true enable VT100
+    '''   
     def setVtMode(self, vtmode=True):
         self.__vtmode=vtmode;
-        
-    def setAsciiMode(self, ascimode=True):
-        self.__asciimode=ascimode;
-        
+    
+    '''
+        @brief enable/disable ASCII mode
+        @param[IN] asciimode if true enable ASCII mode
+    '''
+    def setAsciiMode(self, asciimode=True):
+        self.__asciimode=asciimode;
+       
+
+    '''
+        @brief pyT1000 task
+    ''' 
     def run(self):
         while not self.__quit:
             if self.__ser:
@@ -79,7 +109,7 @@ class pyT1000(threading.Thread):
                     if self.__vtmode:
                         self.__print(str(rdata, encoding='ansi'))
                     else:
-                        self.onRx(rdata)
+                        self.__onrx(rdata)
                 
             if not self.__vtmode:
                 if time.time_ns() - self.__last>1000000000:
@@ -88,15 +118,29 @@ class pyT1000(threading.Thread):
                         self.__print("\n")
                     
         
+
+    '''
+        @brief define terminal used
+        @param[IN] terminal the Terminal
+    '''
     def setTerminal(self, terminal):
         self.__term = terminal
-        
+
+    '''
+        @brief print method, output to log and terminal
+        @param[IN] str the string to print
+    ''' 
     def __print(self, str):
         if self.__term:
             self.__term.print(str)
         if not self.__vtmode:
             self.__logger.print(str)
-        
+       
+
+    '''
+        @brief print time to output
+        @param[IN] header the header to print befor time
+    ''' 
     def __printtime(self, header):
         if self.__tagtime:
             self.__last = time.time_ns()
@@ -104,7 +148,12 @@ class pyT1000(threading.Thread):
                         datetime.now().strftime("%H:%M:%S.%f") + ":\033[0m")
             self.__tagtime=False
             
-            
+       
+
+    '''
+        @brief print byte to output
+        @param[IN] char the byte to output
+    '''     
     def __printChar(self, char):
         if self.__asciimode :
             if int(char[0]) > 31 and int(char[0])<128:
@@ -116,6 +165,12 @@ class pyT1000(threading.Thread):
         
                 
         
+
+    '''
+        @brief on transmit request output
+        @param[IN] char the char to send
+        @note to be called by Terminal
+    '''
     def onTx(self, char):
         if char == b"\x03":
             self.__quit=True        
@@ -129,8 +184,13 @@ class pyT1000(threading.Thread):
                 self.__printChar(char)
             if self.__ser:
                 self.__ser.write(char)
-                        
-    def onRx(self, char):
+            
+
+    '''
+        @brief on byte received
+        @param[IN] char the byte received
+    '''            
+    def __onrx(self, char):
         if self.__prevdir == 1:
             self.__tagtime = True
             self.__print("\n")
