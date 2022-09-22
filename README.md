@@ -95,3 +95,33 @@ exemple :
 ```
  -stp STP1_5
 ```
+
+#### Log output
+
+arg: _-L_
+
+values : directory
+
+Select output directory for log files
+
+exemple : 
+```
+ -L ../../my/best/logs
+```
+
+#### Run script
+
+arg: _-s_
+
+values : script file
+
+Run script file
+
+exemple : 
+```
+ -s ../../my/best/script.yml
+```
+
+## Script file structure
+
+TBD
