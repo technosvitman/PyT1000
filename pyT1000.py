@@ -180,7 +180,10 @@ class pyT1000(threading.Thread):
         @return True if should continue
     '''
     def onScriptPeriod(self, seq):
-        self.onTx(bytes(seq))
+        d = bytes(seq)
+        while len(d):
+            self.onTx(d[0:1])
+            d = d[1:]
         return not self.__quit
 
     '''
