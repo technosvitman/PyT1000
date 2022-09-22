@@ -8,6 +8,7 @@ class Terminal(threading.Thread):
     def __init__(self, on_char):
         threading.Thread.__init__(self)
         self.__on_char = on_char
+        self.__quit = False
         self.start()        
     
     '''
@@ -15,7 +16,7 @@ class Terminal(threading.Thread):
     '''
     def run(self):
         output = ""
-        while output != b"\x03":
+        while output != b"\x03" and self.__quit==False:
             output = self.getch()
             if output:
                 self.__on_char(output)        
@@ -27,6 +28,12 @@ class Terminal(threading.Thread):
     '''
     def getch(self):
         return b"\x03"  
+    
+    '''
+        @brief close terminal
+    '''
+    def close(self):
+        self.__quit=True
     
     '''
         @brief print char to terminal

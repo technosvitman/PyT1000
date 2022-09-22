@@ -30,15 +30,24 @@ class pyT1000(threading.Thread):
         self.__logger = Logger(outputdir)
         self.__script=script
         
-        keyboard.on_press_key(0x48, self.open_special)
-        keyboard.on_press_key(0x4B, self.open_special)
-        keyboard.on_press_key(0x4D, self.open_special)
-        keyboard.on_press_key(0x50, self.open_special)
-        keyboard.on_press_key(0x3B, self.open_special)
-        keyboard.on_press_key(0x3C, self.open_special)
-        keyboard.on_press_key(0x3D, self.open_special)
-        keyboard.on_press_key(0x3E, self.open_special)
+        keyboard.on_press_key(0x48, self.on_special)
+        keyboard.on_press_key(0x4B, self.on_special)
+        keyboard.on_press_key(0x4D, self.on_special)
+        keyboard.on_press_key(0x50, self.on_special)
+        # F1
+        keyboard.on_press_key(0x3B, self.on_special)
+        # F2
+        keyboard.on_press_key(0x3C, self.on_special)
+        # F3
+        keyboard.on_press_key(0x3D, self.on_special)
+        # F4
+        keyboard.on_press_key(0x3E, self.on_special)
+        # F12
+        keyboard.on_press_key(0x44, self.on_special)
         self.start()   
+        if script:
+            script.setOnAutoRequest(self.onScriptPeriod)
+            script.start()
 
     '''
         @brief open serial port
@@ -46,15 +55,13 @@ class pyT1000(threading.Thread):
     '''
     def open(self, ser):
         self.__ser=ser
-        self.__ser.open()
-        
+        self.__ser.open()        
 
     '''
-        @brief init pyT1000
-        @param[IN] outputdir log file output directory
-        @param[IN] script loaded script
+        @brief on special key event
+        @param[IN] e the key event
     '''
-    def open_special(self, e):
+    def on_special(self, e):
         if self.__ser:
             k = e.scan_code
             if k == 0x48:
@@ -73,6 +80,9 @@ class pyT1000(threading.Thread):
                 self.__next_cmd = b"\033[R"
             elif k == 0x3E:
                 self.__next_cmd = b"\033[S"
+            elif k == 0x44:
+                print("k")
+                self.__quit = True
 
     '''
         @brief close serial port
@@ -116,7 +126,8 @@ class pyT1000(threading.Thread):
                     if not self.__tagtime:
                         self.__tagtime = True
                         self.__print("\n")
-                    
+        self.__term.close()
+        exit(0)
         
 
     '''
@@ -162,9 +173,15 @@ class pyT1000(threading.Thread):
                 self.__print(str(char))
         else:
             self.__print("%02X "%int(char[0]))
-        
-                
-        
+            
+    '''
+        @brief on script period
+        @param[IN] seq the char sequence
+        @return True if should continue
+    '''
+    def onScriptPeriod(self, seq):
+        self.onTx(bytes(seq))
+        return not self.__quit
 
     '''
         @brief on transmit request output
@@ -236,8 +253,8 @@ if __name__ == "__main__":
     
     script=None
     if args.s:
-        script = Script(args.s)
-        print(script)
+        script = Script()
+        script.load(args.s)
 
     t1000 = pyT1000(args.L, script)
     
@@ -261,7 +278,4 @@ if __name__ == "__main__":
         elif args.ascii:
             t1000.setAsciiMode()
             
-        while t1000.is_alive():
-            time.sleep(1)
-
-        
+        t1000.join()

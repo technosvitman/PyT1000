@@ -1,16 +1,32 @@
 import yaml
 from .Request import Request
+from .RequestRunner import RequestRunner
 from .Response import Response
 
 class Script():
-    def __init__(self, filename):
+
+    '''
+        @brief init script
+    '''
+    def __init__(self):    
+        self.__on_auto_request = None
         self.__reqs=[]
+        self.__runners=[]
         self.__resps=[]
         self.__buff=[]
         self.__maxseq=0
-        self.__load(filename)
-    
-    def __load(self, filename):
+    '''
+        @brief set on auto request
+        @param[IN] on_auto_request on request send callback
+    '''
+    def setOnAutoRequest(self, on_auto_request):    
+        self.__on_auto_request = on_auto_request
+        
+    '''
+        @brief load script from file
+        @param[IN] filename the file name
+    '''
+    def load(self, filename):
         f=open(filename, "r")
         root = yaml.load(f, Loader=yaml.FullLoader)
         reqs = root.get("reqs", [])
@@ -19,14 +35,37 @@ class Script():
             r=Request()
             r.load(req)
             self.__reqs.append(r)
+            if r.Period():
+                self.__runners.append(RequestRunner(r, self.onPeriod))
         for resp in resps:
             r=Response()
             r.load(resp)
             s=len(r)
             if self.__maxseq < s:
                 self.__maxseq = s
-            self.__resps.append(r)        
-    
+            self.__resps.append(r)
+        
+    '''
+        @brief start runners for all request
+    '''
+    def start(self):
+        for r in self.__runners:      
+            r.start()
+        
+    '''
+        @brief on runner period hit
+        @param[IN] runner the RequestRunner
+        @param[IN] data the data sequence to send
+    '''
+    def onPeriod(self, runner, data):
+        if self.__on_auto_request : 
+            return self.__on_auto_request(data)
+        return False
+        
+    '''
+        @brief compute input data
+        @return data to send or None
+    '''
     def Compute(self, data):
         self.__buff += data
         if len(self.__buff)>self.__maxseq:
@@ -36,13 +75,22 @@ class Script():
                 self.__buff=[]
                 return self.Run(resp.Run())
         return None
-    
+        
+    '''
+        @brief run request
+        @param[IN] title the request title
+        @return data to send or None
+    '''
     def Run(self, title):
         for r in self.__reqs:
             if r == title :
                 return r.Seq()
         return None
-            
+        
+    '''
+        @brief string
+        @return string
+    '''
     def __str__(self):
         st = "Requests :"
         for req in self.__reqs:

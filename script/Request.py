@@ -18,6 +18,13 @@ class Request(Sequence):
         self.__period = data.get("period", 0)
             
     '''
+        @brief get period
+        @return period
+    '''
+    def Period(self):
+        return self.__period 
+            
+    '''
         @brief representation
         @return representation
     '''
