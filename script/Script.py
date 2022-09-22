@@ -16,10 +16,12 @@ class Script():
         reqs = root.get("reqs", [])
         resps = root.get("resps", [])
         for req in reqs:
-            r=Request(req)
+            r=Request()
+            r.load(req)
             self.__reqs.append(r)
         for resp in resps:
-            r=Response(resp)
+            r=Response()
+            r.load(resp)
             s=len(r)
             if self.__maxseq < s:
                 self.__maxseq = s
