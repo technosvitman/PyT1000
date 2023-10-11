@@ -1,4 +1,5 @@
 import threading
+import time
 
 class Terminal(threading.Thread):
     '''
@@ -16,11 +17,11 @@ class Terminal(threading.Thread):
     '''
     def run(self):
         output = ""
-        while output != b"\x03" and self.__quit==False:
+        while self.__quit==False:
             output = self.getch()
-            if output:
-                self.__on_char(output)        
-        self.print("\033[m\033[2J\033[H")
+            if output and output != b'':
+                self.__on_char(output)   
+            time.sleep(0.01)
     
     '''
         @brief get char

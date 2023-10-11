@@ -19,7 +19,10 @@ class StdTerm(Terminal):
         @see Terminal
     '''   
     def getch(self):
-        return msvcrt.getch()
+        if msvcrt.kbhit():
+            return msvcrt.getch()
+        else:
+            return b''
     
     '''
         @brief print char

@@ -9,6 +9,7 @@ class Request(Sequence):
     def __init__(self):
         Sequence.__init__(self)
         self.__period=0
+        self.__key=0
     
     '''
         @brief load response from yaml
@@ -17,7 +18,8 @@ class Request(Sequence):
     def load(self, data):
         Sequence.load(self, data)
         self.__period = data.get("period", 0)
-        if self.__period<Request.MIN_PERIOD:
+        self.__key = data.get("key", 0)
+        if self.__period != 0 and self.__period<Request.MIN_PERIOD:
             self.__period = Request.MIN_PERIOD
             
     '''
@@ -26,6 +28,13 @@ class Request(Sequence):
     '''
     def Period(self):
         return self.__period 
+            
+    '''
+        @brief get key
+        @return key
+    '''
+    def Key(self):
+        return self.__key
             
     '''
         @brief representation

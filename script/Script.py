@@ -54,6 +54,13 @@ class Script():
             r.start()
         
     '''
+        @brief stop runners for all request
+    '''
+    def stop(self):
+        for r in self.__runners:      
+            r.stop()
+        
+    '''
         @brief on runner period hit
         @param[IN] runner the RequestRunner
         @param[IN] data the data sequence to send
@@ -68,7 +75,7 @@ class Script():
         @return data to send or None
     '''
     def Compute(self, data):
-        self.__buff += data
+        self.__buff.append(data)
         if len(self.__buff)>self.__maxseq:
             self.__buff.pop(0)
         for resp in self.__resps:
@@ -76,6 +83,17 @@ class Script():
                 self.__buff=[]
                 return self.Run(resp.RunId())
         return None
+        
+    '''
+        @brief compute key hit
+        @return data to send or None
+    '''
+    def RunKey(self, key):        
+        for req in self.__reqs:
+            if req.Key() == key:
+                return req.Seq()
+        return None
+        
     '''
         @brief find request
         @param[IN] title the request title

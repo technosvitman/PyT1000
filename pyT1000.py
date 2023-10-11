@@ -42,8 +42,22 @@ class pyT1000(threading.Thread):
         keyboard.on_press_key(0x3D, self.on_special)
         # F4
         keyboard.on_press_key(0x3E, self.on_special)
-        # F12
+        # F5
+        keyboard.on_press_key(0x3F, self.on_special)
+        # F6
+        keyboard.on_press_key(0x40, self.on_special)
+        # F7
+        keyboard.on_press_key(0x41, self.on_special)
+        # F8
+        keyboard.on_press_key(0x42, self.on_special)
+        # F9
+        keyboard.on_press_key(0x43, self.on_special)
+        # F10
         keyboard.on_press_key(0x44, self.on_special)
+        # F11
+        keyboard.on_press_key(0x45, self.on_special)
+        # F12
+        keyboard.on_press_key(0x46, self.on_special)
         self.start()   
         if script:
             script.setOnAutoRequest(self.onScriptPeriod)
@@ -62,27 +76,33 @@ class pyT1000(threading.Thread):
         @param[IN] e the key event
     '''
     def on_special(self, e):
-        if self.__ser:
-            k = e.scan_code
-            if k == 0x48:
-                self.__next_cmd = b"\033[A"
-            elif k == 0x4B:
-                self.__next_cmd = b"\033[B"
-            elif k == 0x4D:
-                self.__next_cmd = b"\033[C"
-            elif k == 0x50:
-                self.__next_cmd = b"\033[D"
-            elif k == 0x3B:
-                self.__next_cmd = b"\033[P"
-            elif k == 0x3C:
-                self.__next_cmd = b"\033[Q"
-            elif k == 0x3D:
-                self.__next_cmd = b"\033[R"
-            elif k == 0x3E:
-                self.__next_cmd = b"\033[S"
-            elif k == 0x44:
-                print("k")
-                self.__quit = True
+        k = e.scan_code
+        if k == 0x48:
+            self.__next_cmd = b"\033[A"
+        elif k == 0x4B:
+            self.__next_cmd = b"\033[B"
+        elif k == 0x4D:
+            self.__next_cmd = b"\033[C"
+        elif k == 0x50:
+            self.__next_cmd = b"\033[D"
+        elif k == 0x3B:
+            self.__next_cmd = b"\033[P"
+        elif k == 0x3C:
+            self.__next_cmd = b"\033[Q"
+        elif k == 0x3D:
+            self.__next_cmd = b"\033[R"
+        elif k == 0x3E:
+            self.__next_cmd = b"\033[S"
+        elif k >= 0x3F and k <= 0x42:
+            if self.__script : 
+                self.__next_cmd = self.__script.RunKey(k-0x3E)
+        elif k == 0x44:
+            self.__print("\r\n\033[31m EXIT!")
+            self.__term.close()
+            if script:
+                script.stop()
+            time.sleep(1)
+            self.__quit = True
 
     '''
         @brief close serial port
@@ -111,15 +131,16 @@ class pyT1000(threading.Thread):
     def run(self):
         while not self.__quit:
             if self.__ser:
-                rdata = self.__ser.read(1)
+                rdata = self.__ser.read(128)
                 if  self.__next_cmd:
                     self.__ser.write(self.__next_cmd)
                     self.__next_cmd=None
                 elif rdata and rdata != b'':
-                    if self.__vtmode:
-                        self.__print(str(rdata, encoding='ansi'))
-                    else:
-                        self.__onrx(rdata)
+                    for d in rdata : 
+                        if self.__vtmode:
+                            self.__print(str(d, encoding='ansi'))
+                        else:
+                            self.__onrx(d)
                 
             if not self.__vtmode:
                 if time.time_ns() - self.__last>1000000000:
@@ -127,6 +148,7 @@ class pyT1000(threading.Thread):
                         self.__tagtime = True
                         self.__print("\n")
         self.__term.close()
+        self.__print("\033[m\033[2J\033[H")
         exit(0)
         
 
@@ -172,7 +194,7 @@ class pyT1000(threading.Thread):
             else:
                 self.__print(str(char))
         else:
-            self.__print("%02X "%int(char[0]))
+            self.__print("%02X "%int(char))
             
     '''
         @brief on script period
@@ -192,16 +214,14 @@ class pyT1000(threading.Thread):
         @note to be called by Terminal
     '''
     def onTx(self, char):
-        if char == b"\x03":
-            self.__quit=True        
-        elif not self.__next_cmd:
+        if not self.__next_cmd:
             if not self.__vtmode:
                 if self.__prevdir == 0:
                     self.__tagtime = True
                     self.__print("\n")
                     self.__prevdir=1
                 self.__printtime("\n\033[32m TX")
-                self.__printChar(char)
+                self.__printChar(char[0])
             if self.__ser:
                 self.__ser.write(char)
             
