@@ -98,12 +98,13 @@ class pyT1000(threading.Thread):
         elif k >= 0x3F and k <= 0x42:
             if self.__script : 
                 tt, self.__next_cmd = self.__script.RunKey(k-0x3E)
-                if self.__next_cmd :                     
-                    self.__tagtime = True              
-                    self.__printtime("\n\033[35mMANUAL : \033[36m"+ tt+"\n\033[32m TX")
-                    for d in self.__next_cmd : 
-                        self.__printChar(d)                    
-                    self.__tagtime = True
+                if not self.__vtmode:  
+                    if self.__next_cmd :                   
+                        self.__tagtime = True              
+                        self.__printtime("\n\033[35mMANUAL : \033[36m"+ tt+"\n\033[32m TX")                    
+                        for d in self.__next_cmd : 
+                            self.__printChar(d)
+                        self.__tagtime = True
                         
         elif k == 0x44:
             self.__print("\r\n\033[31m EXIT!")
@@ -147,7 +148,7 @@ class pyT1000(threading.Thread):
                 if rdata and rdata != b'':
                     for d in rdata : 
                         if self.__vtmode:
-                            self.__print(str(d, encoding='ansi'))
+                            self.__print(chr(d))
                         else:
                             self.__onrx(d)
                 
@@ -197,10 +198,10 @@ class pyT1000(threading.Thread):
     '''     
     def __printChar(self, char):
         if self.__asciimode :
-            if int(char[0]) > 31 and int(char[0])<128:
-                self.__print(char.decode())
+            if int(char) > 31 and int(char)<128:
+                self.__print(chr(char))
             else:
-                self.__print(str(char))
+                self.__print("\\x%02X"%int(char))
         else:
             self.__print("%02X "%int(char))
             
@@ -209,9 +210,10 @@ class pyT1000(threading.Thread):
         @param[IN] seq the char sequence
         @return True if should continue
     '''
-    def onScriptPeriod(self, seq):                 
-        self.__tagtime = True
-        self.__printtime("\n\n\r\033[35mTIMED REQUEST : \033[36m"+ seq.Title()+"\n\033[32m TX")
+    def onScriptPeriod(self, seq):             
+        if not self.__vtmode:                      
+            self.__tagtime = True
+            self.__printtime("\n\n\r\033[35mTIMED REQUEST : \033[36m"+ seq.Title()+"\n\033[32m TX")
         d = bytes(seq.Seq())
         while len(d):
             self.onTx(d[0:1])
@@ -251,9 +253,11 @@ class pyT1000(threading.Thread):
         if self.__script:
             dd, ddt, tt=self.__script.Compute(char)
             if tt:
-                self.__print("\n\033[35mFOUND : \033[36m"+ tt)
+                if not self.__vtmode:                  
+                    self.__print("\n\033[35mFOUND : \033[36m"+ tt)
             if dd:
-                self.__print("\n\033[35mAUTO RESPONSE : \033[36m"+ tt)
+                if not self.__vtmode:                  
+                    self.__print("\n\033[35mAUTO RESPONSE : \033[36m"+ tt)
                 d = bytes(dd)
                 while len(d):
                     self.onTx(d[0:1], True)
