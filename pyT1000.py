@@ -95,7 +95,12 @@ class pyT1000(threading.Thread):
             self.__next_cmd = b"\033[S"
         elif k >= 0x3F and k <= 0x42:
             if self.__script : 
-                self.__next_cmd = self.__script.RunKey(k-0x3E)
+                self.__next_cmd = self.__script.RunKey(k-0x3E)            
+                if self.__next_cmd :                
+                    self.__printtime("\n\033[32m TX")
+                    for d in self.__next_cmd : 
+                        self.__printChar(d)
+                        
         elif k == 0x44:
             self.__print("\r\n\033[31m EXIT!")
             self.__term.close()
