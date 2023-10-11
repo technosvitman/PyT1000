@@ -78,7 +78,7 @@ class pyT1000(threading.Thread):
     '''
     def on_special(self, e):
         k = e.scan_code
-        self.__skip  = 2
+        self.__skip  = 1
         if k == 0x48:
             self.__next_cmd = b"\033[A"
         elif k == 0x4B:
@@ -97,11 +97,12 @@ class pyT1000(threading.Thread):
             self.__next_cmd = b"\033[S"
         elif k >= 0x3F and k <= 0x42:
             if self.__script : 
-                self.__next_cmd = self.__script.RunKey(k-0x3E)
+                tt, self.__next_cmd = self.__script.RunKey(k-0x3E)
                 if self.__next_cmd :                
-                    self.__printtime("\n\033[32m TX")
+                    self.__printtime("\n\033[35mMANUAL : \033[36m"+ tt+"\n\033[32m TX")
                     for d in self.__next_cmd : 
-                        self.__printChar(d)
+                        self.__printChar(d)                    
+                    self.__tagtime = True
                         
         elif k == 0x44:
             self.__print("\r\n\033[31m EXIT!")
@@ -138,11 +139,11 @@ class pyT1000(threading.Thread):
     def run(self):
         while not self.__quit:
             if self.__ser:
-                rdata = self.__ser.read(128)
+                rdata = self.__ser.read(10)
                 if  self.__next_cmd:
                     self.__ser.write(self.__next_cmd)
                     self.__next_cmd = None
-                elif rdata and rdata != b'':
+                if rdata and rdata != b'':
                     for d in rdata : 
                         if self.__vtmode:
                             self.__print(str(d, encoding='ansi'))
@@ -153,7 +154,6 @@ class pyT1000(threading.Thread):
                 if time.time_ns() - self.__last>1000000000:
                     if not self.__tagtime:
                         self.__tagtime = True
-                        self.__print("\n")
         self.__term.close()
         self.__print("\033[m\033[2J\033[H")
         exit(0)
@@ -209,7 +209,8 @@ class pyT1000(threading.Thread):
         @return True if should continue
     '''
     def onScriptPeriod(self, seq):
-        d = bytes(seq)
+        self.__printtime("\n\r\033[35mTIMED REQUEST : \033[36m"+ seq.Title()+"\n\033[32m TX")
+        d = bytes(seq.Seq())
         while len(d):
             self.onTx(d[0:1])
             d = d[1:]
@@ -220,8 +221,8 @@ class pyT1000(threading.Thread):
         @param[IN] char the char to send
         @note to be called by Terminal
     '''
-    def onTx(self, char):
-        if not self.__next_cmd and not self.__skip:
+    def onTx(self, char, force=False):
+        if force or ( not self.__next_cmd and not self.__skip):
             if not self.__vtmode:
                 if self.__prevdir == 0:
                     self.__tagtime = True
@@ -231,7 +232,7 @@ class pyT1000(threading.Thread):
                 self.__printChar(char[0])
             if self.__ser:
                 self.__ser.write(char)
-        if self.__skip : 
+        if not force and self.__skip : 
             self.__skip = self.__skip - 1
 
     '''
@@ -246,11 +247,14 @@ class pyT1000(threading.Thread):
         self.__printtime("\n\033[33m RX")
         self.__printChar(char)
         if self.__script:
-            dd=self.__script.Compute(char)
+            dd, ddt, tt=self.__script.Compute(char)
+            if tt:
+                self.__print("\n\033[35mFOUND : \033[36m"+ tt)
             if dd:
+                self.__print("\n\033[35mAUTO RESPONSE : \033[36m"+ tt)
                 d = bytes(dd)
                 while len(d):
-                    self.onTx(d[0:1])
+                    self.onTx(d[0:1], True)
                     d = d[1:]
             
 

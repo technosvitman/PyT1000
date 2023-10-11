@@ -36,7 +36,7 @@ class Script():
             r.load(req)
             self.__reqs.append(r)
             if r.Period():
-                self.__runners.append(RequestRunner(r, self.onPeriod))
+                self.__runners.append(RequestRunner(r, 0, self.onPeriod))
         for resp in resps:
             r=Response()
             r.load(resp)
@@ -63,11 +63,11 @@ class Script():
     '''
         @brief on runner period hit
         @param[IN] runner the RequestRunner
-        @param[IN] data the data sequence to send
+        @param[IN] req the data sequence to send
     '''
-    def onPeriod(self, runner, data):
+    def onPeriod(self, runner, req):
         if self.__on_auto_request : 
-            return self.__on_auto_request(data)
+            return self.__on_auto_request(req)
         return False
         
     '''
@@ -81,8 +81,9 @@ class Script():
         for resp in self.__resps:
             if resp == self.__buff:
                 self.__buff=[]
-                return self.Run(resp.RunId())
-        return None
+                s, t = self.Run(resp.RunId(), resp.Delay())
+                return s, t, resp.Title()
+        return None, None, None
         
     '''
         @brief compute key hit
@@ -90,9 +91,9 @@ class Script():
     '''
     def RunKey(self, key):        
         for req in self.__reqs:
-            if req.Key() == key:
-                return req.Seq()
-        return None
+            if req.Key() == key:                
+                return req.Title(), req.Seq()
+        return None, None
         
     '''
         @brief find request
@@ -112,10 +113,14 @@ class Script():
         @param[IN] id the request id
         @return data to send or None
     '''
-    def Run(self, id):
+    def Run(self, id, delay=0):
         if id < len(self.__reqs):
-            return self.__reqs[id].Seq()
-        return None
+            if delay :
+                r = RequestRunner(self.__reqs[id], delay, self.onPeriod)
+                r.start()
+            else:
+                return self.__reqs[id].Seq(), self.__reqs[id].Title()
+        return None, None
         
     '''
         @brief string
