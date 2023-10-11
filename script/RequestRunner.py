@@ -20,5 +20,11 @@ class RequestRunner(threading.Thread):
     def run(self):
         while True:
             time.sleep(self.__req.Period()/1000)
-            if not self.__on_period(self, self.__req.Seq()) : 
+            if not self.__on_period or not self.__on_period(self, self.__req.Seq()) : 
                 return
+    
+    '''
+        @brief stop
+    '''
+    def stop(self):        
+        self.__on_period=None

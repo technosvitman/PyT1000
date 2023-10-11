@@ -8,6 +8,7 @@ class Response(Sequence):
     def __init__(self):
         Sequence.__init__(self)
         self.__run = ""
+        self.__runid = None
     
     '''
         @brief load response from yaml
@@ -23,6 +24,20 @@ class Response(Sequence):
     '''
     def Run(self):
         return self.__run 
+            
+    '''
+        @brief set run ID
+        @param[IN] id the run id
+    '''
+    def SetRunId(self, id):
+        self.__runid = id 
+            
+    '''
+        @brief get run ID
+        @return run ID
+    '''
+    def RunId(self):
+        return self.__runid
             
     '''
         @brief representation

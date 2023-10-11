@@ -40,6 +40,7 @@ class Script():
         for resp in resps:
             r=Response()
             r.load(resp)
+            r.SetRunId(self.FindReq(r.Run()))
             s=len(r)
             if self.__maxseq < s:
                 self.__maxseq = s
@@ -51,6 +52,13 @@ class Script():
     def start(self):
         for r in self.__runners:      
             r.start()
+        
+    '''
+        @brief stop runners for all request
+    '''
+    def stop(self):
+        for r in self.__runners:      
+            r.stop()
         
     '''
         @brief on runner period hit
@@ -67,24 +75,46 @@ class Script():
         @return data to send or None
     '''
     def Compute(self, data):
-        self.__buff += data
+        self.__buff.append(data)
         if len(self.__buff)>self.__maxseq:
             self.__buff.pop(0)
         for resp in self.__resps:
             if resp == self.__buff:
                 self.__buff=[]
-                return self.Run(resp.Run())
+                return self.Run(resp.RunId())
         return None
         
     '''
-        @brief run request
-        @param[IN] title the request title
+        @brief compute key hit
         @return data to send or None
     '''
-    def Run(self, title):
+    def RunKey(self, key):        
+        for req in self.__reqs:
+            if req.Key() == key:
+                return req.Seq()
+        return None
+        
+    '''
+        @brief find request
+        @param[IN] title the request title
+        @return request ID or none
+    '''
+    def FindReq(self, title):
+        k=0
         for r in self.__reqs:
-            if r == title :
-                return r.Seq()
+            if r == title :            
+                return k
+            k += 1
+        return None
+        
+    '''
+        @brief run request 
+        @param[IN] id the request id
+        @return data to send or None
+    '''
+    def Run(self, id):
+        if id < len(self.__reqs):
+            return self.__reqs[id].Seq()
         return None
         
     '''
