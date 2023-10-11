@@ -98,7 +98,8 @@ class pyT1000(threading.Thread):
         elif k >= 0x3F and k <= 0x42:
             if self.__script : 
                 tt, self.__next_cmd = self.__script.RunKey(k-0x3E)
-                if self.__next_cmd :                
+                if self.__next_cmd :                     
+                    self.__tagtime = True              
                     self.__printtime("\n\033[35mMANUAL : \033[36m"+ tt+"\n\033[32m TX")
                     for d in self.__next_cmd : 
                         self.__printChar(d)                    
@@ -208,8 +209,9 @@ class pyT1000(threading.Thread):
         @param[IN] seq the char sequence
         @return True if should continue
     '''
-    def onScriptPeriod(self, seq):
-        self.__printtime("\n\r\033[35mTIMED REQUEST : \033[36m"+ seq.Title()+"\n\033[32m TX")
+    def onScriptPeriod(self, seq):                 
+        self.__tagtime = True
+        self.__printtime("\n\n\r\033[35mTIMED REQUEST : \033[36m"+ seq.Title()+"\n\033[32m TX")
         d = bytes(seq.Seq())
         while len(d):
             self.onTx(d[0:1])
