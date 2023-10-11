@@ -25,6 +25,7 @@ class pyT1000(threading.Thread):
         self.__prevdir = 0
         self.__ser=None
         self.__next_cmd=None
+        self.__skip=0
         self.__vtmode=False;
         self.__asciimode=False;
         self.__logger = Logger(outputdir)
@@ -77,6 +78,7 @@ class pyT1000(threading.Thread):
     '''
     def on_special(self, e):
         k = e.scan_code
+        self.__skip  = 2
         if k == 0x48:
             self.__next_cmd = b"\033[A"
         elif k == 0x4B:
@@ -95,7 +97,7 @@ class pyT1000(threading.Thread):
             self.__next_cmd = b"\033[S"
         elif k >= 0x3F and k <= 0x42:
             if self.__script : 
-                self.__next_cmd = self.__script.RunKey(k-0x3E)            
+                self.__next_cmd = self.__script.RunKey(k-0x3E)
                 if self.__next_cmd :                
                     self.__printtime("\n\033[32m TX")
                     for d in self.__next_cmd : 
@@ -139,7 +141,7 @@ class pyT1000(threading.Thread):
                 rdata = self.__ser.read(128)
                 if  self.__next_cmd:
                     self.__ser.write(self.__next_cmd)
-                    self.__next_cmd=None
+                    self.__next_cmd = None
                 elif rdata and rdata != b'':
                     for d in rdata : 
                         if self.__vtmode:
@@ -219,7 +221,7 @@ class pyT1000(threading.Thread):
         @note to be called by Terminal
     '''
     def onTx(self, char):
-        if not self.__next_cmd:
+        if not self.__next_cmd and not self.__skip:
             if not self.__vtmode:
                 if self.__prevdir == 0:
                     self.__tagtime = True
@@ -229,7 +231,8 @@ class pyT1000(threading.Thread):
                 self.__printChar(char[0])
             if self.__ser:
                 self.__ser.write(char)
-            
+        if self.__skip : 
+            self.__skip = self.__skip - 1
 
     '''
         @brief on byte received
