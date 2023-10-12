@@ -1,1 +1,1 @@
-cmd.exe /C "py pyT1000.py -gui"
+cmd.exe /C "py pyT1000.py -s script.yml"

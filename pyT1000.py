@@ -1,15 +1,19 @@
 import datetime
 import time
 import argparse
-import wx
 from datetime import datetime
 import threading
 import keyboard
 from core import *
 from script import *
-from gui import *
 
 class pyT1000(threading.Thread):
+
+    TX_COLOR = "\033[32m"
+    RX_COLOR = "\033[33m"
+    SEQ_COLOR = "\033[96m"
+    INFO_COLOR = "\033[36m"
+    NORMAL_COLOR = "\033[37;40m"
 
     '''
         @brief init pyT1000
@@ -101,13 +105,13 @@ class pyT1000(threading.Thread):
                 if not self.__vtmode:  
                     if self.__next_cmd :                   
                         self.__tagtime = True              
-                        self.__printtime("\n\033[35mMANUAL : \033[36m"+ tt+"\n\033[32m TX")                    
+                        self.__printtime("\n"+self.INFO_COLOR+"MANUAL : "+self.SEQ_COLOR+tt+"\n"+self.TX_COLOR+" TX")                    
                         for d in self.__next_cmd : 
                             self.__printChar(d)
                         self.__tagtime = True
                         
         elif k == 0x44:
-            self.__print("\r\n\033[31m EXIT!")
+            self.__print("\r\n\033[31m EXIT!" + self.NORMAL_COLOR)
             self.__term.close()
             if script:
                 script.stop()
@@ -187,7 +191,7 @@ class pyT1000(threading.Thread):
         if self.__tagtime:
             self.__last = time.time_ns()
             self.__print(header+" "+
-                        datetime.now().strftime("%H:%M:%S.%f") + ":\033[0m")
+                        datetime.now().strftime("%H:%M:%S.%f") + ":" + self.NORMAL_COLOR)
             self.__tagtime=False
             
        
@@ -213,12 +217,15 @@ class pyT1000(threading.Thread):
     def onScriptPeriod(self, seq):             
         if not self.__vtmode:                      
             self.__tagtime = True
-            self.__printtime("\n\n\r\033[35mTIMED REQUEST : \033[36m"+ seq.Title()+"\n\033[32m TX")
+            self.__printtime("\n\n\r"+self.INFO_COLOR+"TIMED REQUEST : "+self.SEQ_COLOR + seq.Title()+"\n"+self.TX_COLOR+" TX")
         d = bytes(seq.Seq())
         while len(d):
             self.onTx(d[0:1])
             d = d[1:]
         return not self.__quit
+        
+    def printHelp(self):
+        self.__term.print("\033[47;31m F1-F4 : Standard VT100 Keys | F5-F8 : Command id 1-4 | F10 : EXIT"+self.NORMAL_COLOR+"\n");
 
     '''
         @brief on transmit request output
@@ -232,7 +239,7 @@ class pyT1000(threading.Thread):
                     self.__tagtime = True
                     self.__print("\n")
                     self.__prevdir=1
-                self.__printtime("\n\033[32m TX")
+                self.__printtime("\n"+self.TX_COLOR+" TX")
                 self.__printChar(char[0])
             if self.__ser:
                 self.__ser.write(char)
@@ -248,16 +255,16 @@ class pyT1000(threading.Thread):
             self.__tagtime = True
             self.__print("\n")
             self.__prevdir=0
-        self.__printtime("\n\033[33m RX")
+        self.__printtime("\n"+self.RX_COLOR+" RX")
         self.__printChar(char)
         if self.__script:
             dd, ddt, tt=self.__script.Compute(char)
             if tt:
                 if not self.__vtmode:                  
-                    self.__print("\n\033[35mFOUND : \033[36m"+ tt)
+                    self.__print("\n"+self.INFO_COLOR+"FOUND : "+self.SEQ_COLOR+ tt)
             if dd:
                 if not self.__vtmode:                  
-                    self.__print("\n\033[35mAUTO RESPONSE : \033[36m"+ tt)
+                    self.__print("\n"+self.INFO_COLOR+"AUTO RESPONSE : "+self.SEQ_COLOR+ tt)
                 d = bytes(dd)
                 while len(d):
                     self.onTx(d[0:1], True)
@@ -269,7 +276,6 @@ if __name__ == "__main__":
     parser.add_argument("-ascii", default=False, action="store_true")
     parser.add_argument("-vt100", default=False, action="store_true")
     parser.add_argument("-list", default=False, action="store_true")
-    parser.add_argument("-gui", default=False, action="store_true")
     parser.add_argument("-s", type=str, default=None)
     parser.add_argument("-p", type=str, default=None)
     parser.add_argument("-L", type=str, default=".")
@@ -299,24 +305,15 @@ if __name__ == "__main__":
 
     t1000 = pyT1000(args.L, script)
     
-    if args.gui:
-        app = wx.App()
-        frame = MainFrame()
-        term = GuiTerm(t1000.onTx, frame.GetTerm())   
-        t1000.setTerminal(term)
-        t1000.open(s)
-        app.SetTopWindow(frame)
-        frame.Show()
-        frame.Maximize(True)   
-        app.MainLoop()
-    else:    
-        term = StdTerm(t1000.onTx)
-        t1000.setTerminal(term)
-        t1000.open(s)
+    term = StdTerm(t1000.onTx)
+    t1000.setTerminal(term)
+    t1000.open(s)
+
+    if args.vt100:
+        t1000.setVtMode()
+    elif args.ascii:
+        t1000.setAsciiMode()       
     
-        if args.vt100:
-            t1000.setVtMode()
-        elif args.ascii:
-            t1000.setAsciiMode()
-            
-        t1000.join()
+    t1000.printHelp()
+        
+    t1000.join()
