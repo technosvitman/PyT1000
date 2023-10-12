@@ -26,7 +26,7 @@ class RequestRunner(threading.Thread):
                     return
             if self.__delay : 
                 time.sleep(self.__delay/1000)
-                self.__on_period(self, self.__req)
+                self.__on_period(self, self.__req, True)
                 return
     
     '''

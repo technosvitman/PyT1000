@@ -64,10 +64,11 @@ class Script():
         @brief on runner period hit
         @param[IN] runner the RequestRunner
         @param[IN] req the data sequence to send
+        @param[IN] isdelayed if true this a delayed response
     '''
-    def onPeriod(self, runner, req):
+    def onPeriod(self, runner, req, isdelayed=False):
         if self.__on_auto_request : 
-            return self.__on_auto_request(req)
+            return self.__on_auto_request(req, isdelayed)
         return False
         
     '''
@@ -114,7 +115,7 @@ class Script():
         @return data to send or None
     '''
     def Run(self, id, delay=0):
-        if id < len(self.__reqs):
+        if id and id < len(self.__reqs):
             if delay :
                 r = RequestRunner(self.__reqs[id], delay, self.onPeriod)
                 r.start()

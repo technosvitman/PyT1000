@@ -124,4 +124,30 @@ exemple :
 
 ## Script file structure
 
-TBD
+
+```
+# List of request
+reqs: 
+    # request title (MANDATORY)
+    - title: reboot 
+    # request sequence (MANDATORY)
+      seq: 7E A5 15 10 0E 0B 7E
+    # manual hit key ID 1-4 ( OPTIONAL )
+      key: 1
+    # periodic auto send in ms ( OPTIONAL )
+      period: 1000
+
+# List of attempted response        
+resps: 
+    # response title (MANDATORY)
+    - title: startup
+    # request sequence (MANDATORY)
+      seq: 7E A5 08 10 00 E7 63 7E
+    # request to run on response found (OPTIONAL)
+      run: getconfig
+    # delay before sending response in ms (OPTIONAL)
+      delay: 500
+```
+
+
+A *response* without *run* request is used to add automatic info in log to allow fast read and debug.

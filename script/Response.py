@@ -17,7 +17,7 @@ class Response(Sequence):
     '''
     def load(self, data):
         Sequence.load(self, data)
-        self.__run = data.get("run", "")
+        self.__run = data.get("run", None)
         self.__delay = data.get("delay", 0)
             
     '''
