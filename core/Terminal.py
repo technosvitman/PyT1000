@@ -19,9 +19,9 @@ class Terminal(threading.Thread):
         output = ""
         while self.__quit==False:
             output = self.getch()
-            if output and output != b'':
+            if output and output != b''and output != b'\0':
                 self.__on_char(output)   
-            time.sleep(0.01)
+            time.sleep(0.05)
     
     '''
         @brief get char

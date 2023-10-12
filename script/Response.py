@@ -9,6 +9,7 @@ class Response(Sequence):
         Sequence.__init__(self)
         self.__run = ""
         self.__runid = None
+        self.__delay = 0
     
     '''
         @brief load response from yaml
@@ -17,6 +18,7 @@ class Response(Sequence):
     def load(self, data):
         Sequence.load(self, data)
         self.__run = data.get("run", "")
+        self.__delay = data.get("delay", 0)
             
     '''
         @brief get run target
@@ -24,6 +26,13 @@ class Response(Sequence):
     '''
     def Run(self):
         return self.__run 
+        
+    '''
+        @brief get Delay
+        @return period
+    '''
+    def Delay(self):
+        return self.__delay 
             
     '''
         @brief set run ID
