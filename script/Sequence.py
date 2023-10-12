@@ -13,6 +13,8 @@ class Sequence():
     '''
     def load(self, data):
         self.__seq = data.get("seq", [])
+        if type(self.__seq) is str: 
+            self.__seq = bytes.fromhex(self.__seq)
         self.__title = data.get("title", self.__title)
             
     '''

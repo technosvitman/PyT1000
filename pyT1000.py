@@ -212,12 +212,16 @@ class pyT1000(threading.Thread):
     '''
         @brief on script period
         @param[IN] seq the char sequence
+        @param[IN] isdelayed if true this a delayed response
         @return True if should continue
     '''
-    def onScriptPeriod(self, seq):             
+    def onScriptPeriod(self, seq, isdelayed=False):             
         if not self.__vtmode:                      
             self.__tagtime = True
-            self.__printtime("\n\n\r"+self.INFO_COLOR+"TIMED REQUEST : "+self.SEQ_COLOR + seq.Title()+"\n"+self.TX_COLOR+" TX")
+            t = "TIMED REQUEST"
+            if isdelayed :
+                t= "DELAYED RESPONSE"
+            self.__printtime("\n\n\r"+self.INFO_COLOR+t+" : "+self.SEQ_COLOR + seq.Title()+"\n"+self.TX_COLOR+" TX")
         d = bytes(seq.Seq())
         while len(d):
             self.onTx(d[0:1])
