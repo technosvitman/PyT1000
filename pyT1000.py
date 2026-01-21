@@ -268,7 +268,7 @@ class pyT1000(threading.Thread):
                     self.__print("\n"+self.INFO_COLOR+"FOUND : "+self.SEQ_COLOR+ tt)
             if dd:
                 if not self.__vtmode:                  
-                    self.__print("\n"+self.INFO_COLOR+"AUTO RESPONSE : "+self.SEQ_COLOR+ tt)
+                    self.__print("\n"+self.INFO_COLOR+"AUTO RESPONSE : "+self.SEQ_COLOR+ ddt)
                 d = bytes(dd)
                 while len(d):
                     self.onTx(d[0:1], True)

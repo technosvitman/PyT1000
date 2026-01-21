@@ -40,7 +40,7 @@ class Script():
         for resp in resps:
             r=Response()
             r.load(resp)
-            r.SetRunId(self.FindReq(r.Run()))
+            r.SetRunId(self.FindReq(r.Run()))        
             s=len(r)
             if self.__maxseq < s:
                 self.__maxseq = s
@@ -103,8 +103,8 @@ class Script():
     '''
     def FindReq(self, title):
         k=0
-        for r in self.__reqs:
-            if r == title :            
+        for r in self.__reqs:      
+            if r.Title() == title : 
                 return k
             k += 1
         return None
@@ -115,11 +115,11 @@ class Script():
         @return data to send or None
     '''
     def Run(self, id, delay=0):
-        if id and id < len(self.__reqs):
+        if id != None and id < len(self.__reqs):
             if delay :
                 r = RequestRunner(self.__reqs[id], delay, self.onPeriod)
                 r.start()
-            else:
+            else:                
                 return self.__reqs[id].Seq(), self.__reqs[id].Title()
         return None, None
         
